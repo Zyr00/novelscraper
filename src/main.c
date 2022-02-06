@@ -5,9 +5,7 @@
 
 novel n;
 
-void main(void) { main_tex_file(); }
-
-/*
+// void main(void) { main_tex_file(); }
 
 int
 main(void) {
@@ -41,6 +39,7 @@ main(void) {
   }
 
   chapter_to_tex();
+  main_tex_file(n.total_ch);
 
   return 0;
 }

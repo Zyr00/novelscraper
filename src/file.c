@@ -4,19 +4,18 @@
 void chapter_to_tex() {
   FILE *fp;
   char *name;
-  int i;
   size_t j;
 
-  chapter *ch = NULL;
-  i = 1;
-  for (ch = n.head.next; ch != NULL; ch = ch->next) {
+  chapter *ch = n.head.next;
+  while (ch != NULL) {
     name = (char *) malloc(sizeof(char *));
-    sprintf(name, "ch%d.tex", i++);
+    sprintf(name, "ch%d.tex", ch->number);
 
     printf("Writing file %s for %s...\n", name, ch->title);
 
     fp = fopen(name, "w");
     if (fp == NULL) {
+      free(name);
       err(1, "Could not open file %s", name);
     }
 
@@ -25,7 +24,9 @@ void chapter_to_tex() {
     for (j = 0; j < ch->lines_size; j++)
       fprintf(fp, "%s\n\n", ch->lines[j]);
 
+    free(name);
     fclose(fp);
+    ch = ch->next;
   }
 }
 
@@ -33,6 +34,8 @@ void main_tex_file(int total) {
   FILE *fp;
   char *name = "main.tex";
   int i;
+
+  printf("Writing main tex file...\n");
 
   fp = fopen(name, "w");
 
@@ -44,11 +47,11 @@ void main_tex_file(int total) {
   fprintf(fp, "\\usepackage[a4paper,width=150mm,top=25mm,bottom=25mm]{geometry}\n\n\n");
   fprintf(fp, "\\begin{document}\n\n");
 
-  for (i = 1; i <= total; i++) {
-    fprintf(fp, "\\input{ch%d.tex}\n", i);
+  for (i = 0; i < total; i++) {
+    fprintf(fp, "\\input{ch%d.tex}\n", i + 1);
     fprintf(fp, "\\clearpage\n");
   }
 
-  fprintf(fp, "\\end{document}\n\n");
+  fprintf(fp, "\n\\end{document}\n\n");
   fclose(fp);
 }

@@ -66,15 +66,9 @@ add_to_novel(chapter *ch) {
 }
 
 void
-print_chapter(void) {
-  chapter *ch = NULL;
-  for (ch = n.head.next; ch != NULL; ch = ch->next) {
-    printf("TITLE: %s\n", ch->title);
-    /*
-    for (size_t i = 0; i < ch->lines_size; i++)
-      printf("%s\n", ch->lines[i]);
-    */
-  }
+free_memory(memory *mem) {
+  free(mem->buf);
+  free(mem);
 }
 
 int

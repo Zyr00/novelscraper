@@ -27,6 +27,7 @@ typedef struct {
 } memory;
 
 struct chapter {
+  int number;
   char *title;
   char **lines;
   size_t lines_length;
@@ -42,6 +43,8 @@ typedef struct {
 } novel;
 
 extern novel n;
+
+void free_memory(memory *mem);
 
 /*
  * Function to print a errno to the console

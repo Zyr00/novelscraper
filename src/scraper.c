@@ -53,7 +53,7 @@ get_list_chapters(memory *mem, char *url) {
 
   int final_size = strlen(url) - strlen(".html");
 
-  n.base_url = (char *) malloc(final_size + 1);
+  n.base_url = calloc(final_size + 1, sizeof(char *));
   strncpy(n.base_url, url, final_size);
 
   n.total_ch = number;
@@ -77,6 +77,7 @@ read_chapter(memory *mem, char *url) {
   xmlNodeSetPtr nodeset_title = title_result->nodesetval;
   if(xmlXPathNodeSetIsEmpty(nodeset) || xmlXPathNodeSetIsEmpty(nodeset_title)) {
     xmlXPathFreeObject(result);
+    xmlXPathFreeObject(title_result);
     return NULL;
   }
 
@@ -97,14 +98,15 @@ read_chapter(memory *mem, char *url) {
 
   for (cur = div->children; cur; cur = cur->next) {
     if (cur->type == XML_ELEMENT_NODE) {
-      xmlChar *line = xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
       if (!xmlStrcmp(cur->name, (const xmlChar *) "p")) {
+        xmlChar *line = xmlNodeListGetString(doc, cur->xmlChildrenNode, 1);
         add_to_lines_list(ch, (char *) line);
       }
     }
   }
 
   xmlXPathFreeObject(result);
+  xmlXPathFreeObject(title_result);
   xmlFreeDoc(doc);
   return ch;
 }

@@ -1,12 +1,14 @@
 CC = gcc
 
 LIBXML_CFLAGS := $(shell pkg-config --cflags libxml-2.0)
+PTHREAD_CFLAGS := $(shell pkg-config --cflags libevent_pthreads)
 
 CURL_LDFALGS := $(shell pkg-config --libs libcurl)
 LIBXML_LDFLAGS := $(shell pkg-config --libs libxml-2.0)
+PTHREAD_LDFLAGS := $(shell pkg-config --libs libevent_pthreads)
 
-CFLAGS := -Wall -g $(LIBXML_CFLAGS)
-LDFLAGS := $(CURL_LDFALGS) $(LIBXML_LDFLAGS)
+CFLAGS := -Wall -g $(LIBXML_CFLAGS) $(PTHREAD_CFLAGS)
+LDFLAGS := $(CURL_LDFALGS) $(LIBXML_LDFLAGS) $(PTHREAD_LDFLAGS)
 
 SDIR = src
 ODIR = obj
@@ -37,8 +39,7 @@ endif
 
 clean:
 	rm -fr $(ODIR)
+	rm -fr *.tex
 ifneq ("$(wildcard ./$(BIN))","")
 	rm $(BIN)
 endif
-
-

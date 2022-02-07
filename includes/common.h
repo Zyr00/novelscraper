@@ -13,13 +13,37 @@
 #include <libxml/HTMLparser.h>
 #include <libxml/xpath.h>
 #include <libxml/uri.h>
+#include <pthread.h>
 
+/**
+ * A function to stop the compiler from complaning that the
+ * void *_args from the thread is not used
+ */
+#define UNUSED(x) (void)(x)
+
+/**
+ * The Initial size of the chapter lines
+ */
 #define INIT_SIZE 10
+
+/*
+ * The max number of threads that can run at a time
+ */
 #define MAX_RUNNING_THREADS 10
 
-#define BASE_URL "https://freewebnovel.com/"
+/*
+ * Xpath of the link from the last chapter of a novel
+ */
 #define LAST_URL "/html/body/div[2]/div/div/div[1]/div[2]/ul/li[1]/a"
+
+/*
+ * Xpath of the chapter title
+ */
 #define TITLE "/html/body/div[2]/div/div/div[1]/span"
+
+/*
+ * Xpath of the div that contains the chapter content
+ */
 #define DIV_TXT "/html/body/div[2]/div/div/div[2]"
 
 typedef struct {
@@ -43,11 +67,12 @@ typedef struct {
   int total_ch;
 } novel;
 
+/**
+ * Make a global novel
+ */
 extern novel n;
 
-void free_memory(memory *mem);
-
-/*
+/**
  * Function to print a errno to the console
  * @warning does not work on widows
  *
@@ -79,11 +104,6 @@ void init_chapter_lines_list(chapter *);
  */
 int add_to_lines_list(chapter *, char *);
 
-/*
- * Print all chapters in the novel
- */
-void print_chapter(void);
-
 /**
  * Add chapter to novel if fails exits
  *
@@ -91,7 +111,26 @@ void print_chapter(void);
  */
 void add_to_novel(chapter *);
 
+/**
+ * Free a memory struct pointer
+ *
+ * @param memory the memory pointer to free
+ */
+void free_memory(memory *);
 
+/**
+ * Free the novel struct, this includes
+ * all of the chapters
+ */
+void free_novel(void);
+
+/**
+ * Extract a number from a string
+ *
+ * @param char the string
+ *
+ * @return the number found or -1
+ */
 int get_number_from_string(char *);
 
 #endif

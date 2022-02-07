@@ -1,10 +1,3 @@
-/**
- * @file common.c
- * @author João Cunha
- * @brief Common functions
- *
- * Common stuff.
- */
 #include "../includes/common.h"
 
 void
@@ -71,10 +64,26 @@ free_memory(memory *mem) {
   free(mem);
 }
 
+void
+free_novel(void) {
+  chapter *ch = NULL;
+  while (n.head.next) {
+    ch = n.head.next;
+    n.head.next = ch->next;
+    for (size_t i = 0; i < ch->lines_size; i++)
+      free(ch->lines[i]);
+    free(ch->lines);
+    free(ch->title);
+    free(ch);
+  }
+
+  free(n.base_url);
+}
+
 int
 get_number_from_string(char *str) {
   char *p = str;
-  int val = 0;
+  int val = -1;
   while (*p) {
     if (isdigit(*p)) {
       val = strtol(p, &p, 10);

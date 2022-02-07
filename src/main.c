@@ -2,18 +2,18 @@
 #include "../includes/curl.h"
 #include "../includes/scraper.h"
 #include "../includes/file.h"
-#include <pthread.h>
-
-#define UNUSED(x) (void)(x)
-
 novel n;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t wait_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 int chapter_count = 1;
 int max_running_threads_count = 0;
 
+/**
+ * Function called by thread to
+ * fetch and store the chapter
+ *
+ * @param void pointer of arguments (NOT USED)
+ */
 void *handle_chapters_read(void *);
 
 int
@@ -29,10 +29,8 @@ main(void) {
   curl_global_init(CURL_GLOBAL_DEFAULT);
 
   mem = make_request(u);
-  get_list_chapters(mem, u);
+  get_total_chapters_count(mem, u);
   free_memory(mem);
-
-  n.total_ch = 1;
 
   pthread_t threads[n.total_ch];
   thread_release_count = 0;
@@ -49,29 +47,11 @@ main(void) {
     }
   }
 
-  int release_value = thread_release_count;
-  for (i = thread_release_count; i < n.total_ch; i++) {
+  for (i = thread_release_count; i < n.total_ch; i++)
     pthread_join(threads[i], NULL);
-    release_value++;
-  }
 
   chapter_to_tex();
   main_tex_file(n.total_ch);
-
-  printf("\nTOTAL CHAPTERS: %d\nTHREADS RELEASED: %d\n\n", n.total_ch, release_value);
-
-  chapter *ch = NULL;
-  while (n.head.next) {
-    ch = n.head.next;
-    n.head.next = ch->next;
-    for (size_t i = 0; i < ch->lines_size; i++)
-      free(ch->lines[i]);
-    free(ch->lines);
-    free(ch->title);
-    free(ch);
-  }
-
-  free(n.base_url);
 
   return 0;
 }

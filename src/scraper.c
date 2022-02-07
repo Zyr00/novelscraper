@@ -34,7 +34,7 @@ static xmlXPathObjectPtr get_xpath(htmlDocPtr doc, char *xpath) {
 }
 
 void
-get_list_chapters(memory *mem, char *url) {
+get_total_chapters_count(memory *mem, char *url) {
   htmlDocPtr doc = get_doc(mem, url);
 
   xmlXPathObjectPtr result = get_xpath(doc, LAST_URL);

@@ -13,6 +13,13 @@
  */
 chapter *read_chapter(memory *, char *);
 
-void get_list_chapters(memory *mem, char *url);
+/**
+ * Get the total count of chapters to handle
+ * @warning value goes to global novel
+ *
+ * @param memory the html page in memory
+ * @param char the string url of the html page
+ */
+void get_total_chapters_count(memory *, char *);
 
 #endif

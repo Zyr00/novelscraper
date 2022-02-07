@@ -15,6 +15,7 @@
 #include <libxml/uri.h>
 
 #define INIT_SIZE 10
+#define MAX_RUNNING_THREADS 10
 
 #define BASE_URL "https://freewebnovel.com/"
 #define LAST_URL "/html/body/div[2]/div/div/div[1]/div[2]/ul/li[1]/a"

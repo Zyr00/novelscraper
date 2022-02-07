@@ -4,17 +4,16 @@
 #include "../includes/file.h"
 #include <pthread.h>
 
+#define UNUSED(x) (void)(x)
+
 novel n;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t wait_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-typedef struct {
-  memory *mem;
-  char *url;
-  int number;
-} thread_args;
+int chapter_count = 1;
+int max_running_threads_count = 0;
 
-// void main(void) { main_tex_file(); }
-//
 void *handle_chapters_read(void *);
 
 int
@@ -22,9 +21,9 @@ main(void) {
   LIBXML_TEST_VERSION;
 
   memory *mem;
-  int i;
-  // char *u = "https://freewebnovel.com/nano-machine-retranslated-version.html";
-  char *u = "https://freewebnovel.com/master-fus-beloved-petite-wife-is-calling-for-divorce-again.html";
+  int i, j, thread_release_count;
+  char *u = "https://freewebnovel.com/nano-machine-retranslated-version.html";
+  // char *u = "https://freewebnovel.com/master-fus-beloved-petite-wife-is-calling-for-divorce-again.html";
 
   init_novel();
   curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -33,27 +32,33 @@ main(void) {
   get_list_chapters(mem, u);
   free_memory(mem);
 
+  n.total_ch = 1;
+
   pthread_t threads[n.total_ch];
+  thread_release_count = 0;
 
   for (i = 0; i < n.total_ch; i++) {
-    char url[250];
-    memset(&url, '\0', sizeof(url));
-    snprintf(url, 250, "%s/chapter-%d.html", n.base_url, i + 1);
-    printf("Requesting url: %s\n", url);
+    pthread_create(&threads[i], NULL, handle_chapters_read, NULL);
 
-    mem = make_request(url);
-    if (mem == NULL)
-      err(1, "Error requesting page: \t%s\n", url);
-
-    thread_args args = { mem, url, i + 1 };
-    pthread_create(&threads[i], NULL, handle_chapters_read, (void *) &args);
+    if (max_running_threads_count >= MAX_RUNNING_THREADS) {
+      for (j = 0; j < max_running_threads_count; j++) {
+        pthread_join(threads[thread_release_count], NULL);
+        thread_release_count++;
+      }
+      max_running_threads_count = 0;
+    }
   }
 
-  for (i = 0; i < n.total_ch; i++)
+  int release_value = thread_release_count;
+  for (i = thread_release_count; i < n.total_ch; i++) {
     pthread_join(threads[i], NULL);
+    release_value++;
+  }
 
   chapter_to_tex();
   main_tex_file(n.total_ch);
+
+  printf("\nTOTAL CHAPTERS: %d\nTHREADS RELEASED: %d\n\n", n.total_ch, release_value);
 
   chapter *ch = NULL;
   while (n.head.next) {
@@ -70,25 +75,36 @@ main(void) {
 
   return 0;
 }
-// */
 
 void *handle_chapters_read(void *_args) {
+  UNUSED(_args);
+
   chapter *ch = NULL;
+  memory *mem;
+  char url[250];
+  int current;
 
-  thread_args args = *(thread_args *) _args;
-  printf("Processing chapter %d...\n", args.number);
+  pthread_mutex_lock(&mutex);
+  max_running_threads_count++;
+  current = chapter_count++;
+  pthread_mutex_unlock(&mutex);
 
-  ch = read_chapter(args.mem, args.url);
-  if (ch == NULL) {
-    err(1, "Error getting chapter");
-  }
-  ch->number = args.number;
+  sprintf(url, "%s/chapter-%d.html", n.base_url, current);
+
+  printf("Processing CH: %d from URL: %s...\n", current, url);
+
+  mem = make_request(url);
+  if (mem == NULL) err(1, "Error requesting page: \t%s\n", url);
+
+  ch = read_chapter(mem, url);
+  if (ch == NULL) err(1, "Error getting chapter");
+  ch->number = current;
+
+  free_memory(mem);
 
   pthread_mutex_lock(&mutex);
   add_to_novel(ch);
   pthread_mutex_unlock(&mutex);
-
-  free_memory(args.mem);
 
   pthread_exit(NULL);
 }
